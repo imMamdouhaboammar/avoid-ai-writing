@@ -2,14 +2,78 @@
 
 # avoid-ai-writing
 
-Audit & rewrite content to remove AI writing patterns. A practical skill for any AI agent. Supports detect-only and edit-in-place modes, plus voice profiles.
+Audit & rewrite content to remove AI writing patterns. A portable, multi-agent skill suite and CLI for any AI agent. Supports detect-only, edit-in-place, voice profiles, and deterministic preservation verification.
 
-[![GitHub stars](https://img.shields.io/github/stars/conorbronsdon/avoid-ai-writing?style=social)](https://github.com/conorbronsdon/avoid-ai-writing/stargazers)
+[![Agent Skill](https://img.shields.io/badge/Agent_Skill-Verified-blue?style=flat-square&logo=anthropic)](SKILL.md)
+[![Skills.sh](https://img.shields.io/badge/Skills.sh-avoid--ai--writing-black?style=flat-square)](https://skills.sh/avoid-ai-writing)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-Compatible-6B4FBB?style=flat-square)](https://docs.anthropic.com/en/docs/claude-code)
+[![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-Ready-4285F4?style=flat-square&logo=google)](https://github.com/google-gemini)
+[![Codex](https://img.shields.io/badge/Codex-Compatible-10A37F?style=flat-square&logo=openai)](https://github.com/openai/codex)
+[![Cursor](https://img.shields.io/badge/Cursor-Supported-000000?style=flat-square)](https://cursor.com)
+[![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=flat-square&logo=bun&logoColor=white)](https://bun.sh)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-[![X](https://img.shields.io/badge/X-@ConorBronsdon-black?style=flat-square&logo=x)](https://x.com/ConorBronsdon)
 
 <img src="docs/demo.gif" alt="The bundled detector engine flagging 13 AI-writing patterns by category in a sample paragraph, then scoring the clean rewrite 0/100" width="800">
 </div>
+
+---
+
+## Agentic Multi-Skill Architecture
+
+Avoid AI Writing operates either as a unified single-file skill (`SKILL.md`) or as an orchestrated 7-agent DAG for multi-agent systems:
+
+```mermaid
+flowchart TD
+    User["User Intent / Prompt"] --> Router["avoid-ai-writing-router (Orchestrator)"]
+    
+    Router -->|"detect_only"| Detector["ai-writing-detector"]
+    Router -->|"rewrite_returned_text"| Rewriter["voice-preserving-rewriter"]
+    Router -->|"mutate_named_file"| FileEdit["file-edit-in-place"]
+    Router -->|"compare_before_after"| Verifier["preservation-verifier"]
+    Router -->|"consequential_authorship"| Ethics["false-positive-reviewer"]
+    
+    Detector -->|"feed_findings"| Rewriter
+    Detector -->|"feed_findings"| FileEdit
+    Detector -->|"uncertainty_query"| Ethics
+    
+    Rewriter -->|"verify_output"| Verifier
+    FileEdit -->|"verify_mutation"| Verifier
+    
+    Verifier -.->|"repair_reentry (max 1)"| Rewriter
+    Verifier -.->|"repair_reentry (max 1)"| FileEdit
+    Verifier -.->|"residual_recheck"| Detector
+```
+
+| Agent Skill | Directory | Primary Role |
+| :--- | :--- | :--- |
+| **Router** | [`skills/avoid-ai-writing-router`](skills/avoid-ai-writing-router) | Orchestrates workflows, sets loop bounds, applies lenses |
+| **Detector** | [`skills/ai-writing-detector`](skills/ai-writing-detector) | Extracts patterns, stylometric scores, and Tier 1-3 hits |
+| **Rewriter** | [`skills/voice-preserving-rewriter`](skills/voice-preserving-rewriter) | Reconstructs sentences across 5 voice profiles |
+| **File Editor** | [`skills/file-edit-in-place`](skills/file-edit-in-place) | Edits markdown files in-place; refuses non-prose |
+| **Verifier** | [`skills/preservation-verifier`](skills/preservation-verifier) | Hard gate: checks code blocks, tables, math, and links |
+| **Reviewer** | [`skills/false-positive-reviewer`](skills/false-positive-reviewer) | Evaluates technical jargon and stops punitive attribution |
+| **Canonical** | [`skills/avoid-ai-writing`](skills/avoid-ai-writing) | Core rulebook and reference catalog |
+
+---
+
+## Universal CLI Quickstart
+
+Run the built-in CLI directly with Bun or Node without manual setup:
+
+```bash
+# Audit a phrase or file
+bunx avoid-ai-writing detect "Acme is nestled in the heart of Boulder."
+bunx avoid-ai-writing detect ./README.md
+
+# Verify that an edit preserved all code fences, tables, and links
+bunx avoid-ai-writing verify original.md rewritten.md
+
+# Route a prompt through the multi-agent graph
+bunx avoid-ai-writing route "Audit this technical guide and fix AI buzzwords"
+
+# Install across all local agent environments (Claude, Gemini, Codex, Agent Kernel)
+curl -fsSL https://raw.githubusercontent.com/imMamdouhaboammar/avoid-ai-writing/main/install.sh | bash
+```
 
 ---
 
